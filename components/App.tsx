@@ -2,11 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { JournalEntry, GanttTask } from '../types';
 import pptxgen from "pptxgenjs";
 
-import JournalList from '../JournalList';
-import JournalDetail from '../JournalDetail';
-import JournalForm from '../JournalForm';
-import TimelineView from '../TimelineView';
-import GanttChartView from '../GanttChartView';
+// Fix: Changed all imports from '../' to './' to resolve module paths correctly within the components directory.
+import JournalList from './JournalList';
+import JournalDetail from './JournalDetail';
+import JournalForm from './JournalForm';
+import TimelineView from './TimelineView';
+import GanttChartView from './GanttChartView';
 import VideoGenerationModal from './VideoGenerationModal';
 import { 
     generateGanttChartData, 
@@ -58,8 +59,6 @@ const App: React.FC = () => {
 
     // Effect to manage the main view state and selected entry
     useEffect(() => {
-        // When the user is viewing the form, don't automatically change the view.
-        // This prevents the "flashing" issue when adding or editing an entry.
         if (currentMainView === 'form') {
             return;
         }
@@ -67,21 +66,17 @@ const App: React.FC = () => {
         if (entries.length > 0) {
             const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             
-            // If the view is 'welcome' (e.g., on initial load), switch to 'detail' and show the latest entry.
             if (currentMainView === 'welcome') {
                 setSelectedEntry(sorted[0]);
                 setCurrentMainView('detail');
             } 
-            // Or, if no entry is selected or the selected one is invalid (e.g., deleted), select the latest one.
             else if (!selectedEntry || !entries.find(e => e.id === selectedEntry.id)) {
                 setSelectedEntry(sorted[0]);
             }
         } else {
-            // If there are no entries, always show the welcome screen.
             setCurrentMainView('welcome');
             setSelectedEntry(null);
         }
-    // Adding `selectedEntry` to the dependency array ensures this effect runs with the latest state.
     }, [entries, currentMainView, selectedEntry]);
     
 
@@ -127,7 +122,6 @@ const App: React.FC = () => {
     const handleGoHome = () => {
         setView('home');
         if(entries.length > 0) {
-             // Reselect the latest entry if one exists
             const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             setSelectedEntry(sorted[0]);
             setCurrentMainView('detail');
@@ -188,13 +182,11 @@ const App: React.FC = () => {
             const content = await generatePresentationContent(entries);
             const ppt = new pptxgen();
             
-            // Title slide
             ppt.addSlide().addText(content.title, { 
                 x: 1, y: 2.5, w: 8, h: 1.5, 
                 align: 'center', fontSize: 32, bold: true, color: '003366'
             });
 
-            // Content slides
             content.slides.forEach(slideData => {
                 const slide = ppt.addSlide();
                 slide.addText(slideData.title, { 
@@ -227,7 +219,6 @@ const App: React.FC = () => {
             return <GanttChartView tasks={ganttTasks} onTasksChange={setGanttTasks} onRegenerate={handleGenerateGantt} isGenerating={isGeneratingGantt} />;
         }
         
-        // Home view
         switch (currentMainView) {
             case 'form':
                 return <JournalForm onSave={handleSaveEntry} onCancel={handleGoHome} entryToEdit={entryToEdit} />;

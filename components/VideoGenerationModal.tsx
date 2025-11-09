@@ -104,7 +104,7 @@ const VideoGenerationModal: React.FC<VideoGenerationModalProps> = ({ projectTitl
            {state === 'error' && (
              <button onClick={handleGenerateClick} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700">
                 重試
-             </a >
+             </button>
           )}
         </div>
       </div>

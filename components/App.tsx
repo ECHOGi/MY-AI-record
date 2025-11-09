@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { JournalEntry, GanttTask } from '../types';
 import pptxgen from "pptxgenjs";
 
-// Fix: Changed all imports from '../' to './' to resolve module paths correctly within the components directory.
-import JournalList from './JournalList';
-import JournalDetail from './JournalDetail';
-import JournalForm from './JournalForm';
-import TimelineView from './TimelineView';
-import GanttChartView from './GanttChartView';
+// Fix: Standardized all component imports to use the root-level re-exports to prevent duplicate module errors.
+import JournalList from '../JournalList';
+import JournalDetail from '../JournalDetail';
+import JournalForm from '../JournalForm';
+import TimelineView from '../TimelineView';
+import GanttChartView from '../GanttChartView';
 import VideoGenerationModal from './VideoGenerationModal';
 import { 
     generateGanttChartData, 
@@ -157,7 +157,25 @@ const App: React.FC = () => {
         }
     };
     
+    const checkApiKeyAndPrompt = async (): Promise<boolean> => {
+        try {
+            if (!(await window.aistudio.hasSelectedApiKey())) {
+                await window.aistudio.openSelectKey();
+                // After prompting, re-check to see if they actually selected one.
+                return await window.aistudio.hasSelectedApiKey();
+            }
+            return true;
+        } catch (e) {
+            console.error("Error during API key check/selection:", e);
+            setError("無法驗證 API 金鑰，請重試。");
+            return false;
+        }
+    };
+
     const handleGenerateGantt = async () => {
+        const hasKey = await checkApiKeyAndPrompt();
+        if (!hasKey) return;
+        
         if (entries.length === 0) return;
         setIsGeneratingGantt(true);
         setError(null);
@@ -165,13 +183,16 @@ const App: React.FC = () => {
             const tasks = await generateGanttChartData(entries);
             setGanttTasks(tasks);
         } catch(e: any) {
-            setError(e.message || '無法生成甘特圖資料。');
+            setError(e.message || '無法生成進度表資料。');
         } finally {
             setIsGeneratingGantt(false);
         }
     };
 
     const handleGeneratePpt = async () => {
+        const hasKey = await checkApiKeyAndPrompt();
+        if (!hasKey) return;
+
         if (entries.length === 0) {
             setError("請先新增至少一筆日誌紀錄。");
             return;
@@ -211,6 +232,12 @@ const App: React.FC = () => {
         }
     };
     
+    const handleOpenVideoModal = async () => {
+        const hasKey = await checkApiKeyAndPrompt();
+        if (!hasKey) return;
+        setIsVideoModalOpen(true);
+    };
+
     const renderMainContent = () => {
         if (view === 'timeline') {
             return <TimelineView entries={sortedEntries} onSelectEntry={handleSelectEntry} />;
@@ -297,7 +324,7 @@ const App: React.FC = () => {
                    <FooterButton onClick={() => setView('timeline')} icon={TimelineIcon} text="時間軸"/>
                    <FooterButton onClick={() => setView('gantt')} icon={ChartBarIcon} text="工作進度管制表"/>
                    <FooterButton onClick={handleGeneratePpt} disabled={isGeneratingPpt} icon={PresentationIcon} text={isGeneratingPpt ? '生成中...' : 'AI 生成簡報'}/>
-                   <FooterButton onClick={() => setIsVideoModalOpen(true)} icon={VideoIcon} text="AI 生成影片"/>
+                   <FooterButton onClick={handleOpenVideoModal} icon={VideoIcon} text="AI 生成影片"/>
                 </footer>
             </aside>
             

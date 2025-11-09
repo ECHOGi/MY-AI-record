@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// Fix: Use relative path for local module import.
-import App from './components/App';
+// Fix: Point to the root-level re-export file to start the canonical import chain.
+import App from './App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

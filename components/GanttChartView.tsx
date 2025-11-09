@@ -10,10 +10,10 @@ interface GanttChartViewProps {
 }
 
 const GanttChartView: React.FC<GanttChartViewProps> = ({ tasks, onTasksChange, onRegenerate, isGenerating }) => {
-  const [editingTask, setEditingTask] = useState<{ id: string, field: 'name' | 'start' | 'end' } | null>(null);
+  const [editingTask, setEditingTask] = useState<{ id: string, field: 'name' | 'deadline' | 'status' } | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const handleEditStart = (task: GanttTask, field: 'name' | 'start' | 'end') => {
+  const handleEditStart = (task: GanttTask, field: 'name' | 'deadline' | 'status') => {
     setEditingTask({ id: task.id, field });
     setEditValue(task[field]);
   };
@@ -35,7 +35,7 @@ const GanttChartView: React.FC<GanttChartViewProps> = ({ tasks, onTasksChange, o
     }
   }
 
-  const renderEditableCell = (task: GanttTask, field: 'name' | 'start' | 'end', type: 'text' | 'date' = 'text') => {
+  const renderEditableCell = (task: GanttTask, field: 'name' | 'deadline' | 'status', type: 'text' | 'date' = 'text') => {
     if (editingTask?.id === task.id && editingTask.field === field) {
         return (
             <input
@@ -84,8 +84,8 @@ const GanttChartView: React.FC<GanttChartViewProps> = ({ tasks, onTasksChange, o
           <thead className="bg-slate-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/2">任務名稱</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">開始日期</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">結束日期</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">預計完成日期</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">進度</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-200">
@@ -95,17 +95,17 @@ const GanttChartView: React.FC<GanttChartViewProps> = ({ tasks, onTasksChange, o
                     {renderEditableCell(task, 'name', 'text')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                    {renderEditableCell(task, 'start', 'date')}
+                    {renderEditableCell(task, 'deadline', 'date')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                    {renderEditableCell(task, 'end', 'date')}
+                    {renderEditableCell(task, 'status', 'text')}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-slate-400 mt-2 text-center">點擊任務名稱或日期即可直接修改。</p>
+      <p className="text-xs text-slate-400 mt-2 text-center">點擊任務名稱、日期或進度即可直接修改。</p>
     </div>
   );
 };

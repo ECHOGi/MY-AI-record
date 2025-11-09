@@ -84,10 +84,10 @@ export const generatePresentationContent = async (entries: JournalEntry[]): Prom
 export const generateGanttChartData = async (entries: JournalEntry[]): Promise<GanttTask[]> => {
     try {
         const ai = getAiClient();
-        const simplifiedEntries = entries.map(e => `日期: ${e.date}, 標題: ${e.title}, 內容: ${e.summary || e.content.substring(0,100)}`).join('\n\n');
+        const simplifiedEntries = entries.map(e => `日期: ${e.date}, 標題: ${e.title}, 內容: ${e.content}`).join('\n\n');
         const response = await ai.models.generateContent({
             model: "gemini-2.5-pro",
-            contents: `根據以下專案日誌，分析出主要的任務，並為每個任務估計開始與結束日期，格式為YYYY-MM-DD。請提供最重要的5到10個任務。\n\n日誌：\n${simplifiedEntries}`,
+            contents: `根據以下專案日誌，分析出主要的任務，並為每個任務提供「任務名稱」、「預計完成日期」(格式為YYYY-MM-DD) 和「進度狀態」(例如：已如期完成、進行中、尚未開始)。請提供最重要的5到10個任務。\n\n日誌：\n${simplifiedEntries}`,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -97,10 +97,10 @@ export const generateGanttChartData = async (entries: JournalEntry[]): Promise<G
                         properties: {
                             id: { type: Type.STRING, description: "任務的唯一ID" },
                             name: { type: Type.STRING, description: "任務的名稱" },
-                            start: { type: Type.STRING, description: "任務開始日期 (YYYY-MM-DD)" },
-                            end: { type: Type.STRING, description: "任務結束日期 (YYYY-MM-DD)" },
+                            deadline: { type: Type.STRING, description: "任務的預計完成日期 (YYYY-MM-DD)" },
+                            status: { type: Type.STRING, description: "任務的進度狀態，例如: 已如期完成, 進行中, 尚未開始" },
                         },
-                        required: ["id", "name", "start", "end"],
+                        required: ["id", "name", "deadline", "status"],
                     }
                 }
             }
@@ -108,7 +108,7 @@ export const generateGanttChartData = async (entries: JournalEntry[]): Promise<G
         return JSON.parse(response.text);
     } catch (error) {
         console.error("Error generating Gantt chart data:", error);
-        throw new Error("無法生成甘特圖資料。");
+        throw new Error("無法生成進度表資料。");
     }
 };
 
@@ -119,16 +119,7 @@ export const generateVideoSummary = async (
     onProgress: (message: string) => void
 ): Promise<string> => {
     
-    let ai: GoogleGenAI;
-    
-    // Veo requires API key selection
-    onProgress("正在檢查 API 金鑰...");
-    if (!(await window.aistudio.hasSelectedApiKey())) {
-        await window.aistudio.openSelectKey();
-    }
-    // Fix: Re-initialize the client after key selection to ensure the new key is used, preventing API errors.
-    ai = getAiClient();
-
+    const ai = getAiClient();
 
     onProgress("正在生成影片腳本...");
     const simplifiedEntries = entries.map(e => `在 ${e.date}, 我們完成了 "${e.title}", 主要內容是 ${e.summary}.`).join(' ');
@@ -153,7 +144,7 @@ export const generateVideoSummary = async (
         });
     } catch (e: any) {
          if (e.message?.includes("Requested entity was not found.")) {
-             throw new Error("API 金鑰似乎無效，請重新選擇。");
+             throw new Error("API 金鑰似乎無效或權限不足，請重新選擇。");
          }
          throw e;
     }

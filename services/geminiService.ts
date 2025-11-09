@@ -1,20 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { JournalEntry, GanttTask, PresentationSlide } from '../types';
 
-// ===================================================================================
-//  ★★★ 唯一需要您手動修改的地方 ★★★
-//
-//  請在下面的引號中，貼上您從 Google AI Studio 建立的「新的」、「安全的」API 金鑰
-//  範例: const API_KEY = "AIzaSyABC...您的新金鑰...XYZ";
-//
-// ===================================================================================
-const API_KEY = "AIzaSyC9jbimaZnvvkcvn5pjz3yYw0DvaGdsV3g";
-
 const getAiClient = () => {
-    if (API_KEY === "請在這裡貼上您新的、安全的API金鑰") {
-        throw new Error("API 金鑰尚未設定。請修改 services/geminiService.ts 檔案並填入您的金鑰。");
+    // The API key MUST be obtained exclusively from the environment variable `process.env.API_KEY`.
+    if (!process.env.API_KEY) {
+        throw new Error("API 金鑰尚未設定。請確認環境變數 API_KEY 是否已正確配置。");
     }
-    return new GoogleGenAI({ apiKey: API_KEY });
+    return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
 
@@ -31,7 +23,7 @@ const handleApiError = (error: any, functionName: string): never => {
     const errorMessage = String(error?.message || '').toLowerCase();
 
     if (errorMessage.includes('api key not valid') || errorMessage.includes('invalid api key')) {
-        userMessage = "API 金鑰無效。請前往 Google AI Studio 產生一組新的金鑰，並更新至程式碼中。";
+        userMessage = "API 金鑰無效。請前往 Google AI Studio 產生一組新的金鑰，並確認環境變數已更新。";
     } else if (errorMessage.includes('billing') || errorMessage.includes('quota')) {
         userMessage = "專案計費問題或已達配額上限。請確認您的 Google Cloud 專案已啟用計費功能，這對於使用進階模型是必要的。";
     } else if (errorMessage.includes('permission denied') || errorMessage.includes('access forbidden')) {
@@ -84,6 +76,42 @@ export const describeImage = async (base64: string, mimeType: string): Promise<s
   } catch (error) {
     handleApiError(error, 'describeImage');
   }
+};
+
+// Fix: Add the missing 'createJournalEntryFromText' function to analyze pasted text and generate a structured journal entry.
+export const createJournalEntryFromText = async (text: string): Promise<Partial<JournalEntry>> => {
+    if (!text.trim()) return {};
+    try {
+        const ai = getAiClient();
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `根據以下文字內容，為其生成一個適當的日誌標題、擷取出日期(格式為YYYY-MM-DD)，並生成一個簡短摘要和最多5個相關的標籤。如果找不到日期，請使用今天的日期。\n\n文字內容：\n"${text}"`,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING, description: '根據內容生成的日誌標題。' },
+                        date: { type: Type.STRING, description: '從內容中擷取的日期，格式為 YYYY-MM-DD。' },
+                        summary: { type: Type.STRING, description: '內容的簡短摘要。' },
+                        tags: { type: Type.ARRAY, items: { type: Type.STRING }, description: '最多5個相關的標籤。' },
+                    },
+                    required: ["title", "date", "summary", "tags"],
+                },
+            },
+        });
+        const result = JSON.parse(response.text);
+        
+        // Defensive check for date format. If invalid, default to today.
+        if (!result.date || !/^\d{4}-\d{2}-\d{2}$/.test(result.date)) {
+            console.warn(`AI returned an invalid date format: "${result.date}". Defaulting to today.`);
+            result.date = new Date().toISOString().split('T')[0];
+        }
+
+        return result;
+    } catch (error) {
+        handleApiError(error, 'createJournalEntryFromText');
+    }
 };
 
 export const generatePresentationContent = async (entries: JournalEntry[]): Promise<{ title: string, slides: PresentationSlide[] }> => {
@@ -198,7 +226,7 @@ export const generateVideoSummary = async (
         }
         
         onProgress("正在獲取影片數據...");
-        const response = await fetch(`${downloadLink}&key=${API_KEY}`);
+        const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
         if (!response.ok) {
             throw new Error(`下載影片失敗，伺服器狀態碼: ${response.status}`);
         }

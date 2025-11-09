@@ -213,7 +213,7 @@ const JournalForm: React.FC<JournalFormProps> = ({ onSave, onCancel, entryToEdit
               </label>
               <p className="pl-1">或拖曳至此</p>
             </div>
-            <p className="text-xs text-slate-500">PDF, DOCX, etc.</p>
+            <p className="text-xs text-slate-500">PDF, PPT, DOCX, etc.</p>
           </div>
         </div>
         {files.length > 0 && (

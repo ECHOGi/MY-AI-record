@@ -1,0 +1,5 @@
+{
+  "name": "AI 專案紀錄簿",
+  "description": "一個智能專案紀錄應用程式，使用 Gemini AI 幫助您整理、總結和標記您的專案日誌、文件和照片，讓您的長期專案管理變得輕鬆高效。",
+  "requestFramePermissions": []
+}

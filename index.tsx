@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// Fix: Point to the root-level re-export file to start the canonical import chain.
-import App from './App';
+// Fix: Point directly to the canonical App component inside the components directory.
+import App from './components/App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

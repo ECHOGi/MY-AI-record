@@ -2,15 +2,17 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { JournalEntry, GanttTask, PresentationSlide } from '../types';
 
 // ===================================================================================
-//  請在這裡貼上您新的、安全的 API 金鑰
-//  這是解決所有 AI 功能無效問題的最終修復。
-//  請務必使用一組全新的金鑰，並刪除您之前洩漏的舊金鑰。
+//  ★★★ 唯一需要您手動修改的地方 ★★★
+//
+//  請在下面的引號中，貼上您從 Google AI Studio 建立的「新的」、「安全的」API 金鑰
+//  範例: const API_KEY = "AIzaSyABC...您的新金鑰...XYZ";
+//
 // ===================================================================================
 const API_KEY = "AIzaSyC9jbimaZnvvkcvn5pjz3yYw0DvaGdsV3g";
 
 const getAiClient = () => {
-    if (API_KEY === "AIzaSyC9jbimaZnvvkcvn5pjz3yYw0DvaGdsV3g") {
-        throw new Error("AIzaSyC9jbimaZnvvkcvn5pjz3yYw0DvaGdsV3g");
+    if (API_KEY === "請在這裡貼上您新的、安全的API金鑰") {
+        throw new Error("API 金鑰尚未設定。請修改 services/geminiService.ts 檔案並填入您的金鑰。");
     }
     return new GoogleGenAI({ apiKey: API_KEY });
 };

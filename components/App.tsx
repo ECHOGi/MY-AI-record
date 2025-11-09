@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { JournalEntry, GanttTask } from '../types';
 import pptxgen from "pptxgenjs";
 
-// Fix: Standardized all component imports to use the root-level re-exports to prevent duplicate module errors.
-import JournalList from '../JournalList';
-import JournalDetail from '../JournalDetail';
-import JournalForm from '../JournalForm';
-import TimelineView from '../TimelineView';
-import GanttChartView from '../GanttChartView';
+// Fix: Standardized all component imports to use relative paths within the components directory.
+import JournalList from './JournalList';
+import JournalDetail from './JournalDetail';
+import JournalForm from './JournalForm';
+import TimelineView from './TimelineView';
+import GanttChartView from './GanttChartView';
 import VideoGenerationModal from './VideoGenerationModal';
 import { 
     generateGanttChartData, 

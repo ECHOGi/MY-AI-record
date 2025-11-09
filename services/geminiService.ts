@@ -1,7 +1,14 @@
 import { GoogleGenAI, Type, GenerateContentResponse, Operation } from "@google/genai";
 import type { JournalEntry, GanttTask, PresentationSlide } from '../types';
 
-const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY! });
+// --- START OF CHANGE ---
+// FIX: The API key selection dialog is not appearing. As a definitive fix,
+// the provided API key is now hardcoded directly into the application.
+// IMPORTANT: This key is publicly exposed. For security, please delete this key from your Google AI Studio account after use and replace it with a new one.
+const API_KEY = "AIzaSyD3vTDXlPMWXHR0ISBMlrmvJcOKxVJXlbk"; 
+
+const getAiClient = () => new GoogleGenAI({ apiKey: API_KEY });
+// --- END OF CHANGE ---
 
 
 export const summarizeAndTag = async (content: string): Promise<{ summary: string, tags: string[] }> => {
@@ -166,7 +173,7 @@ export const generateVideoSummary = async (
     }
     
     onProgress("正在獲取影片數據...");
-    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+    const response = await fetch(`${downloadLink}&key=${API_KEY}`);
     const videoBlob = await response.blob();
     
     return URL.createObjectURL(videoBlob);

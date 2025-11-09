@@ -156,26 +156,8 @@ const App: React.FC = () => {
             setEditingTitle(false);
         }
     };
-    
-    const checkApiKeyAndPrompt = async (): Promise<boolean> => {
-        try {
-            if (!(await window.aistudio.hasSelectedApiKey())) {
-                await window.aistudio.openSelectKey();
-                // After prompting, re-check to see if they actually selected one.
-                return await window.aistudio.hasSelectedApiKey();
-            }
-            return true;
-        } catch (e) {
-            console.error("Error during API key check/selection:", e);
-            setError("無法驗證 API 金鑰，請重試。");
-            return false;
-        }
-    };
 
     const handleGenerateGantt = async () => {
-        const hasKey = await checkApiKeyAndPrompt();
-        if (!hasKey) return;
-        
         if (entries.length === 0) return;
         setIsGeneratingGantt(true);
         setError(null);
@@ -190,9 +172,6 @@ const App: React.FC = () => {
     };
 
     const handleGeneratePpt = async () => {
-        const hasKey = await checkApiKeyAndPrompt();
-        if (!hasKey) return;
-
         if (entries.length === 0) {
             setError("請先新增至少一筆日誌紀錄。");
             return;
@@ -232,9 +211,7 @@ const App: React.FC = () => {
         }
     };
     
-    const handleOpenVideoModal = async () => {
-        const hasKey = await checkApiKeyAndPrompt();
-        if (!hasKey) return;
+    const handleOpenVideoModal = () => {
         setIsVideoModalOpen(true);
     };
 

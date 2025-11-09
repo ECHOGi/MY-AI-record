@@ -1,14 +1,49 @@
-import { GoogleGenAI, Type, GenerateContentResponse, Operation } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import type { JournalEntry, GanttTask, PresentationSlide } from '../types';
 
-// --- START OF CHANGE ---
-// FIX: The API key selection dialog is not appearing. As a definitive fix,
-// the provided API key is now hardcoded directly into the application.
-// IMPORTANT: This key is publicly exposed. For security, please delete this key from your Google AI Studio account after use and replace it with a new one.
-const API_KEY = "AIzaSyD3vTDXlPMWXHR0ISBMlrmvJcOKxVJXlbk"; 
+// ===================================================================================
+//  請在這裡貼上您新的、安全的 API 金鑰
+//  這是解決所有 AI 功能無效問題的最終修復。
+//  請務必使用一組全新的金鑰，並刪除您之前洩漏的舊金鑰。
+// ===================================================================================
+const API_KEY = "AIzaSyC9jbimaZnvvkcvn5pjz3yYw0DvaGdsV3g";
 
-const getAiClient = () => new GoogleGenAI({ apiKey: API_KEY });
-// --- END OF CHANGE ---
+const getAiClient = () => {
+    if (API_KEY === "AIzaSyC9jbimaZnvvkcvn5pjz3yYw0DvaGdsV3g") {
+        throw new Error("AIzaSyC9jbimaZnvvkcvn5pjz3yYw0DvaGdsV3g");
+    }
+    return new GoogleGenAI({ apiKey: API_KEY });
+};
+
+
+/**
+ * A centralized error handler to provide user-friendly messages for common API issues.
+ * @param error The original error object.
+ * @param functionName The name of the function where the error occurred, for logging.
+ * @throws An `Error` with a user-friendly message.
+ */
+const handleApiError = (error: any, functionName: string): never => {
+    console.error(`Error in ${functionName}:`, error);
+    let userMessage = "發生未知的 AI 服務錯誤。";
+
+    const errorMessage = String(error?.message || '').toLowerCase();
+
+    if (errorMessage.includes('api key not valid') || errorMessage.includes('invalid api key')) {
+        userMessage = "API 金鑰無效。請前往 Google AI Studio 產生一組新的金鑰，並更新至程式碼中。";
+    } else if (errorMessage.includes('billing') || errorMessage.includes('quota')) {
+        userMessage = "專案計費問題或已達配額上限。請確認您的 Google Cloud 專案已啟用計費功能，這對於使用進階模型是必要的。";
+    } else if (errorMessage.includes('permission denied') || errorMessage.includes('access forbidden')) {
+        userMessage = "權限不足。您的 API 金鑰可能沒有權限使用此 AI 模型。";
+    } else if (errorMessage.includes('requested entity was not found')) {
+        userMessage = "找不到請求的資源。這通常代表您的 API 金鑰或其關聯的專案設定有誤。";
+    } else if (errorMessage.includes('fetch failed') || errorMessage.includes('network error')) {
+        userMessage = "網路連線錯誤，無法連接至 Google AI 服務。請檢查您的網路連線。";
+    } else {
+        userMessage = `AI 服務回報錯誤：${error.message || '未知錯誤'}`;
+    }
+    
+    throw new Error(userMessage);
+};
 
 
 export const summarizeAndTag = async (content: string): Promise<{ summary: string, tags: string[] }> => {
@@ -32,8 +67,7 @@ export const summarizeAndTag = async (content: string): Promise<{ summary: strin
     });
     return JSON.parse(response.text);
   } catch (error) {
-    console.error("Error summarizing and tagging:", error);
-    throw new Error("無法生成摘要和標籤。");
+    handleApiError(error, 'summarizeAndTag');
   }
 };
 
@@ -46,8 +80,7 @@ export const describeImage = async (base64: string, mimeType: string): Promise<s
     });
     return response.text;
   } catch (error) {
-    console.error("Error describing image:", error);
-    throw new Error("無法生成圖片描述。");
+    handleApiError(error, 'describeImage');
   }
 };
 
@@ -83,8 +116,7 @@ export const generatePresentationContent = async (entries: JournalEntry[]): Prom
         });
         return JSON.parse(response.text);
     } catch (error) {
-        console.error("Error generating presentation content:", error);
-        throw new Error("無法生成簡報內容。");
+        handleApiError(error, 'generatePresentationContent');
     }
 };
 
@@ -114,8 +146,7 @@ export const generateGanttChartData = async (entries: JournalEntry[]): Promise<G
         });
         return JSON.parse(response.text);
     } catch (error) {
-        console.error("Error generating Gantt chart data:", error);
-        throw new Error("無法生成進度表資料。");
+        handleApiError(error, 'generateGanttChartData');
     }
 };
 
@@ -126,21 +157,20 @@ export const generateVideoSummary = async (
     onProgress: (message: string) => void
 ): Promise<string> => {
     
-    const ai = getAiClient();
-
-    onProgress("正在生成影片腳本...");
-    const simplifiedEntries = entries.map(e => `在 ${e.date}, 我們完成了 "${e.title}", 主要內容是 ${e.summary}.`).join(' ');
-    const scriptResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
-        contents: `為一個名為 "${projectTitle}" 的專案撰寫一段不超過150字的影片旁白腳本。腳本需要總結以下專案日誌的進展。請讓語氣聽起來專業且鼓舞人心。\n\n日誌內容：\n${simplifiedEntries}`,
-    });
-    const script = scriptResponse.text;
-
-    onProgress("腳本已生成，正在啟動影片渲染...");
-    
-    let operation: Operation;
     try {
-        operation = await ai.models.generateVideos({
+        const ai = getAiClient();
+
+        onProgress("正在生成影片腳本...");
+        const simplifiedEntries = entries.map(e => `在 ${e.date}, 我們完成了 "${e.title}", 主要內容是 ${e.summary}.`).join(' ');
+        const scriptResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-pro',
+            contents: `為一個名為 "${projectTitle}" 的專案撰寫一段不超過150字的影片旁白腳本。腳本需要總結以下專案日誌的進展。請讓語氣聽起來專業且鼓舞人心。\n\n日誌內容：\n${simplifiedEntries}`,
+        });
+        const script = scriptResponse.text;
+
+        onProgress("腳本已生成，正在啟動影片渲染...");
+        
+        let operation = await ai.models.generateVideos({
           model: 'veo-3.1-fast-generate-preview',
           prompt: script,
           config: {
@@ -149,32 +179,31 @@ export const generateVideoSummary = async (
             aspectRatio: '16:9'
           }
         });
-    } catch (e: any) {
-         if (e.message?.includes("Requested entity was not found.")) {
-             throw new Error("API 金鑰似乎無效或權限不足，請重新選擇。");
-         }
-         throw e;
-    }
 
-    onProgress("影片正在處理中，這可能需要幾分鐘...");
-    while (!operation.done) {
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      try {
-        operation = await ai.operations.getVideosOperation({operation: operation});
-      } catch (e: any) {
-        console.error("Error polling video operation:", e);
-        // Don't throw here, just log and continue polling
-      }
-    }
+        onProgress("影片正在處理中，這可能需要幾分鐘...");
+        while (!operation.done) {
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          try {
+            operation = await ai.operations.getVideosOperation({operation: operation});
+          } catch (pollingError) {
+            console.warn("Polling video operation failed, but will continue:", pollingError);
+          }
+        }
 
-    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!downloadLink) {
-        throw new Error("影片生成失敗，未收到下載連結。");
+        const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+        if (!downloadLink) {
+            throw new Error("影片生成失敗，未收到下載連結。");
+        }
+        
+        onProgress("正在獲取影片數據...");
+        const response = await fetch(`${downloadLink}&key=${API_KEY}`);
+        if (!response.ok) {
+            throw new Error(`下載影片失敗，伺服器狀態碼: ${response.status}`);
+        }
+        const videoBlob = await response.blob();
+        
+        return URL.createObjectURL(videoBlob);
+    } catch (error) {
+        handleApiError(error, 'generateVideoSummary');
     }
-    
-    onProgress("正在獲取影片數據...");
-    const response = await fetch(`${downloadLink}&key=${API_KEY}`);
-    const videoBlob = await response.blob();
-    
-    return URL.createObjectURL(videoBlob);
 };

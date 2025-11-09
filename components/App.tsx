@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { JournalEntry, GanttTask } from './types';
+import type { JournalEntry, GanttTask } from '../types';
 import pptxgen from "pptxgenjs";
 
-import JournalList from './components/JournalList';
-import JournalDetail from './components/JournalDetail';
-import JournalForm from './components/JournalForm';
-import TimelineView from './components/TimelineView';
-import GanttChartView from './components/GanttChartView';
-import VideoGenerationModal from './components/VideoGenerationModal';
+import JournalList from './JournalList';
+import JournalDetail from './JournalDetail';
+import JournalForm from './JournalForm';
+import TimelineView from './TimelineView';
+import GanttChartView from './GanttChartView';
+import VideoGenerationModal from './VideoGenerationModal';
 import { 
     generateGanttChartData, 
     generatePresentationContent, 
     generateVideoSummary 
-} from './services/geminiService';
+} from '../services/geminiService';
 
-import { HomeIcon } from './components/icons/HomeIcon';
-import { TimelineIcon } from './components/icons/TimelineIcon';
-import { ChartBarIcon } from './components/icons/ChartBarIcon';
-import { PresentationIcon } from './components/icons/PresentationIcon';
-import { VideoIcon } from './components/icons/VideoIcon';
-import { PlusIcon } from './components/icons/PlusIcon';
+import { HomeIcon } from './icons/HomeIcon';
+import { TimelineIcon } from './icons/TimelineIcon';
+import { ChartBarIcon } from './icons/ChartBarIcon';
+import { PresentationIcon } from './icons/PresentationIcon';
+import { VideoIcon } from './icons/VideoIcon';
+import { PlusIcon } from './icons/PlusIcon';
 
 const App: React.FC = () => {
     const [projectTitle, setProjectTitle] = useState('AI 專案日誌');
@@ -58,10 +58,8 @@ const App: React.FC = () => {
 
     // Effect to determine initial view
     useEffect(() => {
-        // Fix: Implement the logic to set the initial view based on whether entries exist.
         if (entries.length > 0) {
             const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            // If no entry is selected, or the selected one is no longer valid, select the latest.
             if (!selectedEntry || !entries.find(e => e.id === selectedEntry.id)) {
                  setSelectedEntry(sorted[0]);
             }
@@ -72,7 +70,7 @@ const App: React.FC = () => {
             setCurrentMainView('welcome');
             setSelectedEntry(null);
         }
-    }, [entries]);
+    }, [entries, currentMainView]); // Dependency added
     
 
     // Save to localStorage
@@ -116,7 +114,10 @@ const App: React.FC = () => {
     
     const handleGoHome = () => {
         setView('home');
-        if(entries.length > 0 && selectedEntry) {
+        if(entries.length > 0) {
+             // Reselect the latest entry if one exists
+            const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            setSelectedEntry(sorted[0]);
             setCurrentMainView('detail');
         } else {
             setCurrentMainView('welcome');
@@ -231,14 +232,12 @@ const App: React.FC = () => {
         }
     };
     
-    // Fix: Refactor to use `icon` prop instead of `children` to resolve TS errors.
     const NavIconButton = ({ active, onClick, icon, label } : { active: boolean, onClick: () => void, icon: React.ReactNode, label: string}) => (
         <button onClick={onClick} title={label} className={`p-2 rounded-lg transition-all duration-200 transform hover:scale-110 ${active ? 'bg-sky-900/60 text-white' : 'text-sky-100 hover:bg-sky-900/40'}`}>
             {icon}
         </button>
     );
 
-    // Fix: Refactor to use `text` prop instead of `children` to resolve TS errors.
     const FooterButton = ({ onClick, disabled = false, icon: Icon, text } : { onClick: () => void, disabled?: boolean, icon: React.FC<any>, text: React.ReactNode }) => (
          <button
             onClick={onClick}
@@ -277,7 +276,6 @@ const App: React.FC = () => {
                 
                 <div className="p-4 flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                        {/* Fix: Update component usage to pass icon as a prop. */}
                         <NavIconButton label="首頁" active={view === 'home'} onClick={handleGoHome} icon={<HomeIcon className="w-6 h-6"/>}/>
                         <NavIconButton label="時間軸" active={view === 'timeline'} onClick={() => setView('timeline')} icon={<TimelineIcon className="w-6 h-6"/>}/>
                         <NavIconButton label="進度表" active={view === 'gantt'} onClick={() => setView('gantt')} icon={<ChartBarIcon className="w-6 h-6"/>}/>
@@ -292,7 +290,6 @@ const App: React.FC = () => {
                 </div>
 
                 <footer className="p-4 border-t border-white/20 space-y-2">
-                   {/* Fix: Update component usage to pass text content as a prop. */}
                    <FooterButton onClick={handleGoHome} icon={HomeIcon} text="回到首頁"/>
                    <FooterButton onClick={() => setView('timeline')} icon={TimelineIcon} text="時間軸"/>
                    <FooterButton onClick={() => setView('gantt')} icon={ChartBarIcon} text="工作進度管制表"/>

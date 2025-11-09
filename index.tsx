@@ -1,8 +1,7 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 // Fix: Use relative path for local module import.
-import App from './App';
+import App from './components/App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
